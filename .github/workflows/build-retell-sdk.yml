@@ -10,37 +10,41 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # Check out the repository
+      # Step 1: Checkout the repository
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      # Set up Node.js (version 18)
+      # Step 2: Set up Node.js (version 18)
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
           node-version: '18'  # Use Node.js 18
 
-      # Install dependencies
+      # Step 3: Install dependencies
       - name: Install dependencies
         run: |
           npm install
           npm audit fix --audit-level=moderate  # Automatically fix vulnerabilities
 
-      # Build the bundles
+      # Step 4: Create bundles using Parcel (minified and standard)
       - name: Build SDK Bundles
         run: |
-          npm run build
-          
-      # Add, commit, and push changes to the dist folder and package-lock.json
+          # Create a standard bundle (non-minified)
+          npx parcel build src/index.js --out-dir dist --no-minify
+
+          # Create a minified bundle
+          npx parcel build src/index.js --out-dir dist --minify
+
+      # Step 5: Commit and push the changes in dist folder
       - name: Commit and Push Bundles
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git add -f dist/ package-lock.json  # Explicitly add both dist/ and package-lock.json
+          git add -f dist/ package-lock.json  # Explicitly add dist/ and package-lock.json
           git commit -m "Build new Retell SDK bundles"
           git push
 
-      # Run npm audit report
+      # Step 6: Run npm audit report
       - name: Run npm audit
         run: |
           npm audit --audit-level=moderate

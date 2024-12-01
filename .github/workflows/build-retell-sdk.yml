@@ -24,15 +24,15 @@ jobs:
         run: |
           npm install
 
-      - name: Audit dependencies for vulnerabilities
+      - name: Build Retell SDK
         run: |
-          npm audit fix
+          # Ensure the SDK is built with microbundle
+          npm run build
 
-      - name: Build Retell SDK Bundle
+      - name: Create both normal and minified bundles
         run: |
-          # Create both normal and minified bundles
-          npx parcel build src/index.js --dist-dir dist --no-source-maps
-          npx parcel build src/index.js --dist-dir dist --no-source-maps --experimental-scope-hoisting
+          # Use microbundle to build the normal and minified bundles
+          npm run build
           
       - name: Commit and push new bundles
         run: |

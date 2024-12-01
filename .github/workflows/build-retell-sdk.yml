@@ -1,46 +1,46 @@
-name: Build Retell SDK Bundles
+name: Build and Deploy Retell SDK
 
 on:
   push:
     branches:
-      - main
-  release:
-    types:
-      - published
+      - main  # Trigger on pushes to the main branch
 
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout code
+      # Check out the repository
+      - name: Checkout repository
         uses: actions/checkout@v3
 
+      # Set up Node.js (version 18)
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '18'
+          node-version: '18'  # Use Node.js 18
 
+      # Install dependencies
       - name: Install dependencies
         run: |
           npm install
+          npm audit fix --audit-level=moderate  # Automatically fix vulnerabilities
 
-      - name: Audit and fix vulnerabilities
-        run: |
-          npm audit --audit-level=moderate  
-          npm audit fix                   
-          
-      - name: Build Retell SDK
+      # Build the bundles
+      - name: Build SDK Bundles
         run: |
           npm run build
-
-      - name: Create both normal and minified bundles
-        run: |
-          npm run build  # Builds the normal and minified bundles
-
-      - name: Commit and push new bundles
+          
+      # Add, commit, and push changes to the dist folder
+      - name: Commit and Push Bundles
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git add -f dist/  # Force adding the dist folder
+          git add dist/
           git commit -m "Build new Retell SDK bundles"
           git push
+
+      # Run audit report
+      - name: Run npm audit
+        run: |
+          npm audit --audit-level=moderate

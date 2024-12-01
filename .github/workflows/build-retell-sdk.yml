@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - main
-    # Trigger on release events
   release:
     types:
       - published
@@ -25,11 +24,15 @@ jobs:
         run: |
           npm install
 
+      - name: Audit dependencies for vulnerabilities
+        run: |
+          npm audit fix
+
       - name: Build Retell SDK Bundle
         run: |
           # Create both normal and minified bundles
-          npx parcel build src/index.js --out-dir dist --no-source-maps
-          npx parcel build src/index.js --out-dir dist --no-source-maps --experimental-scope-hoisting
+          npx parcel build src/index.js --dist-dir dist --no-source-maps
+          npx parcel build src/index.js --dist-dir dist --no-source-maps --experimental-scope-hoisting
           
       - name: Commit and push new bundles
         run: |
@@ -38,4 +41,3 @@ jobs:
           git add dist/
           git commit -m "Build new Retell SDK bundles"
           git push
-

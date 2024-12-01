@@ -1,0 +1,41 @@
+name: Build Retell SDK Bundles
+
+on:
+  push:
+    branches:
+      - main
+    # Trigger on release events
+  release:
+    types:
+      - published
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Install dependencies
+        run: |
+          npm install
+
+      - name: Build Retell SDK Bundle
+        run: |
+          # Create both normal and minified bundles
+          npx parcel build src/index.js --out-dir dist --no-source-maps
+          npx parcel build src/index.js --out-dir dist --no-source-maps --experimental-scope-hoisting
+          
+      - name: Commit and push new bundles
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add dist/
+          git commit -m "Build new Retell SDK bundles"
+          git push
+

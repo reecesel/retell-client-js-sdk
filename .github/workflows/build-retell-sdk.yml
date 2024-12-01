@@ -30,7 +30,7 @@ jobs:
       - name: Build SDK Bundles
         run: |
           # Create a standard bundle (non-minified)
-          npx parcel build src/index.js --dist-dir dist --no-minify
+          npx parcel build src/index.js --dist-dir dist
 
           # Create a minified bundle
           npx parcel build src/index.js --dist-dir dist --minify

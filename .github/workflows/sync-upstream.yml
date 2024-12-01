@@ -12,6 +12,11 @@ jobs:
       - name: Checkout fork
         uses: actions/checkout@v3
 
+      - name: Set Git user configuration
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
       - name: Add upstream repository
         run: git remote add upstream https://github.com/RetellAI/retell-client-js-sdk.git
 
@@ -23,3 +28,4 @@ jobs:
 
       - name: Push changes
         run: git push
+

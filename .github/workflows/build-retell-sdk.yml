@@ -26,14 +26,14 @@ jobs:
           npm install
           npm audit fix --audit-level=moderate  # Automatically fix vulnerabilities
 
-      # Step 4: Create bundles using Parcel (minified and standard)
+      # Step 4: Build the retell-client-js-sdk bundles (minified and non-minified)
       - name: Build SDK Bundles
         run: |
-          # Create a standard bundle (non-minified)
-          npx parcel build src/index.js --dist-dir dist
+          # Build using npm script (assuming npm run build is set up in retell-client-js-sdk package.json)
+          npm run build
 
-          # Create a minified bundle
-          npx parcel build src/index.js --dist-dir dist --minify
+          npx parcel build src/index.js --dist-dir dist  # Standard bundle
+          npx parcel build src/index.js --dist-dir dist --minify  # Minified bundle
 
       # Step 5: Commit and push the changes in dist folder
       - name: Commit and Push Bundles

@@ -31,22 +31,16 @@ jobs:
         run: |
           npm run build
           
-      # Add, commit, and push changes to the dist folder
+      # Add, commit, and push changes to the dist folder and package-lock.json
       - name: Commit and Push Bundles
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git add -f dist/
+          git add -f dist/ package-lock.json  # Explicitly add both dist/ and package-lock.json
           git commit -m "Build new Retell SDK bundles"
           git push
 
-      # Run audit report
-      - name: Run npm audit
-        run: |
-          npm audit --audit-level=moderate
-
-
-      # Run audit report
+      # Run npm audit report
       - name: Run npm audit
         run: |
           npm audit --audit-level=moderate

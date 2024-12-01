@@ -32,6 +32,7 @@ jobs:
           # Build using npm script (assuming npm run build is set up in retell-client-js-sdk package.json)
           npm run build
 
+          # Optionally: You can also use parcel directly, if it's not covered by npm run build
           npx parcel build src/index.js --dist-dir dist  # Standard bundle
           npx parcel build src/index.js --dist-dir dist --minify  # Minified bundle
 

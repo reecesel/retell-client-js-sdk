@@ -1,4 +1,4 @@
-name: Build Retell Web Bundle
+name: Build and Bundle Retell SDK
 
 on:
   push:
@@ -7,38 +7,44 @@ on:
   workflow_dispatch:
 
 jobs:
-  build-bundle:
+  build:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
+      - name: Checkout code
         uses: actions/checkout@v3
 
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '18' # Specify the version compatible with your project
-          cache: 'npm'
+          node-version: 18
 
-      - name: Install Parcel (specific version)
+      - name: Install dependencies
         run: |
-          npm install --save-dev parcel@latest # Ensure the latest version of Parcel is installed
+          npm install -g parcel-bundler
+          npm install
 
-      - name: Create project structure and install SDK
+      - name: Get Retell SDK Version
+        id: get-version
+        run: echo "VERSION=$(npm view retell-client-js-sdk version)" >> $GITHUB_ENV
+
+      - name: Build the SDK bundle
         run: |
           mkdir -p build-project/src
-          cd build-project
-          npm init -y
-          npm install retell-client-js-sdk
-          echo "import { RetellWebClient } from 'retell-client-js-sdk'; window.retellWebClient = new RetellWebClient();" > src/index.js
-
-      - name: Build the bundle
-        run: |
+          echo "import { RetellWebClient } from 'retell-client-js-sdk'; window.retellWebClient = new RetellWebClient();" > build-project/src/index.js
           cd build-project
           npx parcel build src/index.js --dist-dir ../dist --no-source-maps --no-cache
+          cd ..
 
-      - name: Upload built bundle as artifact
-        uses: actions/upload-artifact@v3
-        with:
-          name: retell-bundle
-          path: dist/
+      - name: Rename bundles with version
+        run: |
+          mv dist/index.js dist/retell-sdk-${{ env.VERSION }}-bundle.js
+          mv dist/index.min.js dist/retell-sdk-${{ env.VERSION }}-bundle.min.js
+
+      - name: Add and Commit Bundles
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add dist/retell-sdk-${{ env.VERSION }}-bundle.js dist/retell-sdk-${{ env.VERSION }}-bundle.min.js
+          git commit -m "Add bundled files for Retell SDK v${{ env.VERSION }}"
+          git push

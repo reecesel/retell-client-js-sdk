@@ -27,15 +27,22 @@ jobs:
       - name: Install dependencies
         run: |
           npm install
-          
-      # Ensure `retell-client-js-sdk` is installed
-      - name: Ensure retell-client-js-sdk is installed
+
+      # Ensure webpack and webpack-cli are installed
+      - name: Ensure webpack and webpack-cli are installed
+        run: |
+          npm install --save-dev webpack webpack-cli
+
+      # Install retell-client-js-sdk (if not in package.json already)
+      - name: Install retell-client-js-sdk
         run: |
           npm install retell-client-js-sdk
 
       # Verify installation of dependencies
       - name: Verify installation
         run: |
+          npm ls webpack
+          npm ls webpack-cli
           npm ls retell-client-js-sdk
 
       # Build the project with Webpack
@@ -43,7 +50,7 @@ jobs:
         run: |
           npx webpack --config webpack.config.js
 
-      # Commit the created bundles to the repository
+      # Commit the created bundles to repository
       - name: Commit bundles to repository
         run: |
           git add ./dist/

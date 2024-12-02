@@ -24,6 +24,12 @@ jobs:
           npm install -g parcel@latest
           npm install
           npm install retell-client-js-sdk --save
+          npm install --save-dev @parcel/transformer-babel @parcel/transformer-js @babel/core @babel/preset-env
+
+      - name: Create Babel and Parcel Config
+        run: |
+          echo '{ "presets": ["@babel/preset-env"] }' > .babelrc
+          echo '{ "extends": "@parcel/config-default", "transformers": { "*.{js,mjs,jsm,jsx,es6,cjs}": ["@parcel/transformer-babel", "@parcel/transformer-js"] } }' > .parcelrc
 
       - name: Get Retell SDK Version
         id: get-version

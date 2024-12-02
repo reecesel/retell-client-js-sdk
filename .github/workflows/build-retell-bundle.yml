@@ -23,6 +23,7 @@ jobs:
         run: |
           npm install -g parcel@latest
           npm install
+          npm install retell-client-js-sdk --save
 
       - name: Get Retell SDK Version
         id: get-version

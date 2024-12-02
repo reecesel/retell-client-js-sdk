@@ -35,15 +35,22 @@ jobs:
           echo "import { RetellWebClient } from 'retell-client-js-sdk';" > src/index.js
           echo "window.retellWebClient = new RetellWebClient();" >> src/index.js
 
+      - name: Get Retell SDK Version
+        id: get-version
+        run: |
+          # Extract the installed version of retell-client-js-sdk
+          SDK_VERSION=$(npm list retell-client-js-sdk | grep retell-client-js-sdk | awk '{print $2}' | sed 's/@/-/g')
+          echo "SDK_VERSION=${SDK_VERSION}" >> $GITHUB_ENV
+
       - name: Bundle Retell SDK (Full Version)
         run: |
-          # Bundle the SDK into a full, unminified file
-          npx esbuild src/index.js --bundle --outfile=dist/retell-bundle-full.js
+          # Use the version in the filename for the full version
+          npx esbuild src/index.js --bundle --outfile=dist/retell-bundle-${{ env.SDK_VERSION }}.js
 
       - name: Bundle Retell SDK (Minified Version)
         run: |
-          # Bundle the SDK into a minified file
-          npx esbuild src/index.js --bundle --minify --outfile=dist/retell-bundle.min.js
+          # Use the version in the filename for the minified version
+          npx esbuild src/index.js --bundle --minify --outfile=dist/retell-bundle-${{ env.SDK_VERSION }}.min.js
 
       - name: Commit bundled files to repo
         run: |
@@ -51,11 +58,11 @@ jobs:
           git config user.email "actions@github.com"
           
           # Force add the bundled files to the commit even if they're ignored by .gitignore
-          git add -f dist/retell-bundle-full.js
-          git add -f dist/retell-bundle.min.js
+          git add -f dist/retell-bundle-${{ env.SDK_VERSION }}.js
+          git add -f dist/retell-bundle-${{ env.SDK_VERSION }}.min.js
           
           # Commit the changes with a message reflecting the version of the SDK
-          git commit -m "Update retell-bundles with version $(npm list retell-client-js-sdk | grep retell-client-js-sdk | awk '{print $2}' | sed 's/@/-/g')"
+          git commit -m "Update retell-bundles to version ${{ env.SDK_VERSION }}"
 
           # Push the changes back to the repository
           git push origin main

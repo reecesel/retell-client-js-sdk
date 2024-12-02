@@ -1,60 +1,57 @@
-name: Build and Deploy JS SDK
+name: Bundle Retell SDK
 
 on:
   push:
     branches:
-      - main
+      - main  # Trigger on push to main branch
   pull_request:
     branches:
-      - main
+      - main  # Trigger on PR to main branch
 
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
-      # Checkout the repository
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      # Set up Node.js (version 18.x as an example, you can change as needed)
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '18'
+          node-version: '16'  # Use the appropriate Node.js version
 
-      # Install dependencies
       - name: Install dependencies
         run: |
+          # Install npm dependencies, including retell-client-js-sdk
           npm install
-
-      # Ensure webpack and webpack-cli are installed
-      - name: Ensure webpack and webpack-cli are installed
+          
+      - name: Install Retell SDK
         run: |
-          npm install --save-dev webpack webpack-cli
+          npm install retell-client-js-sdk  # Install the retell-client-js-sdk package
 
-      # Install retell-client-js-sdk (if not in package.json already)
-      - name: Install retell-client-js-sdk
+      - name: Create index.js for bundling
         run: |
-          npm install retell-client-js-sdk
+          mkdir -p src
+          echo "import { RetellWebClient } from 'retell-client-js-sdk';" > src/index.js
+          echo "window.retellWebClient = new RetellWebClient();" >> src/index.js
 
-      # Verify installation of dependencies
-      - name: Verify installation
+      - name: Bundle Retell SDK
         run: |
-          npm ls webpack
-          npm ls webpack-cli
-          npm ls retell-client-js-sdk
+          # Bundle the SDK into a single minified file
+          npx esbuild src/index.js --bundle --minify --outfile=dist/retell-bundle.js
 
-      # Build the project with Webpack
-      - name: Run Webpack build
+      - name: Commit bundled files to repo
         run: |
-          npx webpack --config webpack.config.js
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          
+          # Stage the bundled file for commit
+          git add dist/retell-bundle.js
+          
+          # Commit the changes with a message reflecting the version of the SDK
+          git commit -m "Update retell-bundle.js with version $(npm list retell-client-js-sdk | grep retell-client-js-sdk | awk '{print $2}' | sed 's/@/-/g')"
 
-      # Commit the created bundles to repository
-      - name: Commit bundles to repository
-        run: |
-          git add ./dist/
-          git commit -m "Add built bundles"
+          # Push the changes back to the repository
           git push origin main
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

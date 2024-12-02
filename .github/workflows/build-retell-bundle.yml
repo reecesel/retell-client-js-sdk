@@ -24,7 +24,7 @@ jobs:
         run: |
           # Install npm dependencies, including retell-client-js-sdk
           npm install
-          
+
       - name: Install Retell SDK
         run: |
           npm install retell-client-js-sdk  # Install the retell-client-js-sdk package
@@ -38,8 +38,8 @@ jobs:
       - name: Get Retell SDK Version
         id: get-version
         run: |
-          # Extract the installed version of retell-client-js-sdk
-          SDK_VERSION=$(npm list retell-client-js-sdk | grep retell-client-js-sdk | awk '{print $2}' | sed 's/@/-/g')
+          # Extract the installed version of retell-client-js-sdk directly from package.json using jq
+          SDK_VERSION=$(jq -r '.dependencies["retell-client-js-sdk"]' package.json | sed 's/^@//;s/\//-/')
           echo "SDK_VERSION=${SDK_VERSION}" >> $GITHUB_ENV
 
       - name: Bundle Retell SDK (Full Version)

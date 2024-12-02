@@ -1,61 +1,81 @@
-name: Bundle Retell SDK
+name: Bundle Retell SDK for Website
 
 on:
   push:
     branches:
-      - main  # Trigger on push to main branch
-  pull_request:
-    branches:
-      - main  # Trigger on PR to main branch
+      - main
+  workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
+    - name: Checkout code
+      uses: actions/checkout@v2
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: '20'  # Use the latest stable Node.js version
+    - name: Set up Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '16'
 
-      - name: Install dependencies
-        run: |
-          # Install npm dependencies, including retell-client-js-sdk
-          npm install
+    - name: Install dependencies
+      run: |
+        npm install
 
-      - name: Install Retell SDK
-        run: |
-          npm install retell-client-js-sdk  # Install the retell-client-js-sdk package
+    - name: Install retell-client-js-sdk
+      run: |
+        npm install retell-client-js-sdk
 
-      - name: Create index.js for bundling
-        run: |
-          mkdir -p src
-          echo "import { RetellWebClient } from 'retell-client-js-sdk';" > src/index.js
-          echo "window.retellWebClient = new RetellWebClient();" >> src/index.js
+    - name: Bundle Retell SDK with full and minified versions
+      run: |
+        # Install parcel if necessary
+        npm install -g parcel
 
-      - name: Get Retell SDK Version
-        id: get-version
-        run: |
-          # Extract the installed version of retell-client-js-sdk directly from package.json using jq
-          SDK_VERSION=$(jq -r '.dependencies["retell-client-js-sdk"]' package.json | sed 's/^@//;s/\//-/;s/^\^//')  # Remove the ^ character
-          echo "SDK_VERSION=${SDK_VERSION}" >> $GITHUB_ENV
+        # Create a directory for the bundle if it doesn't exist
+        mkdir -p dist
 
-      - name: Bundle Retell SDK (Full Version)
-        run: |
-          # Use the version in the filename for the full version
-          npx esbuild src/index.js --bundle --outfile=dist/retell-bundle-${{ env.SDK_VERSION }}.js
+        # Create a JavaScript file to initialize the Retell SDK
+        echo "import { RetellWebClient } from 'retell-client-js-sdk';" > src/index.js
+        echo "window.retellWebClient = new RetellWebClient();" >> src/index.js
 
-      - name: Bundle Retell SDK (Minified Version)
-        run: |
-          # Use the version in the filename for the minified version
-          npx esbuild src/index.js --bundle --minify --outfile=dist/retell-bundle-${{ env.SDK_VERSION }}.min.js
+        # Build the bundle using parcel
+        npx parcel build src/index.js --out-dir dist --no-source-maps --public-url ./ --minify
 
-      - name: Commit bundled files to repo
-        run: |
-          git config user.name "GitHub Actions"
-          git config user.email "actions@github.com"
-          
-          # Force add the bundled files to the commit even if they're ignored by .gitignore
-          git add -f dist/retell-bundle-${{ env.SDK_VERSION }}.
+    - name: Extract SDK version
+      run: |
+        # Extract the installed version of retell-client-js-sdk
+        SDK_VERSION=$(npm list retell-client-js-sdk | grep retell-client-js-sdk | awk '{print $2}' | sed 's/@/-/g')
+        echo "SDK_VERSION=${SDK_VERSION}" >> $GITHUB_ENV
+
+    - name: Rename bundled files with version number
+      run: |
+        # Rename the output files to include the version number
+        mv dist/index.js dist/retell-bundle-${{ env.SDK_VERSION }}.js
+        mv dist/index.min.js dist/retell-bundle-${{ env.SDK_VERSION }}.min.js
+
+    - name: Commit bundled files to repo
+      run: |
+        git config user.name "GitHub Actions"
+        git config user.email "actions@github.com"
+        
+        # Force add the bundled files to the commit even if they're ignored by .gitignore
+        git add -f dist/retell-bundle-${{ env.SDK_VERSION }}.js
+        git add -f dist/retell-bundle-${{ env.SDK_VERSION }}.min.js
+        
+        # Commit the changes with a message reflecting the version of the SDK
+        git commit -m "Update retell-bundles to version ${{ env.SDK_VERSION }}"
+
+        # Push the changes back to the repository
+        git push origin main
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Create Git tag for the bundled version
+      run: |
+        # Create a Git tag for the current version
+        git tag "v${{ env.SDK_VERSION }}"
+
+        # Push the tag to the repository
+        git push origin "v${{ env.SDK_VERSION }}"
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

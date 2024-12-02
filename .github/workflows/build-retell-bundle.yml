@@ -39,7 +39,7 @@ jobs:
         id: get-version
         run: |
           # Extract the installed version of retell-client-js-sdk directly from package.json using jq
-          SDK_VERSION=$(jq -r '.dependencies["retell-client-js-sdk"]' package.json | sed 's/^@//;s/\//-/')
+          SDK_VERSION=$(jq -r '.dependencies["retell-client-js-sdk"]' package.json | sed 's/^@//;s/\//-/;s/^\^//')  # Remove the ^ character
           echo "SDK_VERSION=${SDK_VERSION}" >> $GITHUB_ENV
 
       - name: Bundle Retell SDK (Full Version)
@@ -58,13 +58,4 @@ jobs:
           git config user.email "actions@github.com"
           
           # Force add the bundled files to the commit even if they're ignored by .gitignore
-          git add -f dist/retell-bundle-${{ env.SDK_VERSION }}.js
-          git add -f dist/retell-bundle-${{ env.SDK_VERSION }}.min.js
-          
-          # Commit the changes with a message reflecting the version of the SDK
-          git commit -m "Update retell-bundles to version ${{ env.SDK_VERSION }}"
-
-          # Push the changes back to the repository
-          git push origin main
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          git add -f dist/retell-bundle-${{ env.SDK_VERSION }}.

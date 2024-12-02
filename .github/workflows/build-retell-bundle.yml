@@ -26,11 +26,23 @@ jobs:
 
       - name: Get Retell SDK Version
         id: get-version
-        run: echo "VERSION=$(npm view retell-client-js-sdk version)" >> $GITHUB_ENV
+        run: |
+          echo "VERSION=$(npm view retell-client-js-sdk version)" >> $GITHUB_ENV
+          echo "Using Retell SDK Version: $VERSION"
 
       - name: Build the SDK bundle
         run: |
           mkdir -p build-project/src
+          echo '{
+            "name": "retell-client-js-bundle",
+            "version": "1.0.0",
+            "main": "index.js",
+            "license": "MIT",
+            "dependencies": {
+              "retell-client-js-sdk": "*"
+            }
+          }' > build-project/package.json
+          npm install --prefix build-project
           echo "import { RetellWebClient } from 'retell-client-js-sdk'; window.retellWebClient = new RetellWebClient();" > build-project/src/index.js
           cd build-project
           npx parcel build src/index.js --dist-dir ../dist --no-source-maps --no-cache

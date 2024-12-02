@@ -28,12 +28,12 @@ jobs:
         run: |
           git merge upstream/main --allow-unrelated-histories || echo "Merge conflicts detected" && exit 1
 
-      - name: Resolve merge conflicts (if any)
+      - name: Resolve merge conflicts (force ours strategy)
         if: failure()
         run: |
-          # Prefer fork's changes for conflicting files
-          git merge --strategy-option ours upstream/main
-          git add .
+          # Forcefully prefer fork's changes for all files
+          git merge --strategy-option ours upstream/main || true
+          git ls-files -u | awk '{print $4}' | xargs git add
           git commit -m "Resolve merge conflicts preferring fork changes"
 
       - name: Push changes

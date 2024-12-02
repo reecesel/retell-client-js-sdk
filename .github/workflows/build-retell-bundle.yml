@@ -18,7 +18,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '16'  # Use the appropriate Node.js version
+          node-version: '20'  # Use the latest stable Node.js version
 
       - name: Install dependencies
         run: |
@@ -35,21 +35,27 @@ jobs:
           echo "import { RetellWebClient } from 'retell-client-js-sdk';" > src/index.js
           echo "window.retellWebClient = new RetellWebClient();" >> src/index.js
 
-      - name: Bundle Retell SDK
+      - name: Bundle Retell SDK (Full Version)
         run: |
-          # Bundle the SDK into a single minified file
-          npx esbuild src/index.js --bundle --minify --outfile=dist/retell-bundle.js
+          # Bundle the SDK into a full, unminified file
+          npx esbuild src/index.js --bundle --outfile=dist/retell-bundle-full.js
+
+      - name: Bundle Retell SDK (Minified Version)
+        run: |
+          # Bundle the SDK into a minified file
+          npx esbuild src/index.js --bundle --minify --outfile=dist/retell-bundle.min.js
 
       - name: Commit bundled files to repo
         run: |
           git config user.name "GitHub Actions"
           git config user.email "actions@github.com"
           
-          # Stage the bundled file for commit
-          git add dist/retell-bundle.js
+          # Force add the bundled files to the commit even if they're ignored by .gitignore
+          git add -f dist/retell-bundle-full.js
+          git add -f dist/retell-bundle.min.js
           
           # Commit the changes with a message reflecting the version of the SDK
-          git commit -m "Update retell-bundle.js with version $(npm list retell-client-js-sdk | grep retell-client-js-sdk | awk '{print $2}' | sed 's/@/-/g')"
+          git commit -m "Update retell-bundles with version $(npm list retell-client-js-sdk | grep retell-client-js-sdk | awk '{print $2}' | sed 's/@/-/g')"
 
           # Push the changes back to the repository
           git push origin main

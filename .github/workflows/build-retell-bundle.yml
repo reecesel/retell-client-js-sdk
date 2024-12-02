@@ -23,6 +23,7 @@ jobs:
         run: |
           npm install -g parcel@latest
           npm install
+          npm install --save-dev @parcel/config-default
           npm install retell-client-js-sdk --save
           npm install --save-dev @parcel/transformer-babel @parcel/transformer-js @babel/core @babel/preset-env
 

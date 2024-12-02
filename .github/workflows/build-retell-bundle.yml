@@ -21,7 +21,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          npm install -g parcel-bundler
+          npm install -g parcel@latest
           npm install
 
       - name: Get Retell SDK Version

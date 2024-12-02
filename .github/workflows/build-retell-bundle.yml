@@ -1,4 +1,4 @@
-name: Build and Deploy Retell SDK
+name: Build and Deploy JS SDK
 
 on:
   push:
@@ -10,96 +10,44 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-22.04
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v2
+    runs-on: ubuntu-latest
 
+    steps:
+      # Checkout the repository
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      # Set up Node.js (version 18.x as an example, you can change as needed)
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
           node-version: '18'
 
+      # Install dependencies
       - name: Install dependencies
         run: |
-          npm install --save-dev webpack webpack-cli babel-loader @babel/core @babel/preset-env
-
-      - name: Set up build-project directory
+          npm install
+          
+      # Ensure `retell-client-js-sdk` is installed
+      - name: Ensure retell-client-js-sdk is installed
         run: |
-          mkdir -p build-project/src
-          echo "import { RetellWebClient } from 'retell-client-js-sdk'; window.retellWebClient = new RetellWebClient();" > build-project/src/index.js
+          npm install retell-client-js-sdk
 
-      - name: Set up Webpack configuration for both full and minified versions
+      # Verify installation of dependencies
+      - name: Verify installation
         run: |
-          echo "const path = require('path');
-          module.exports = [
-            {
-              entry: './build-project/src/index.js',
-              output: {
-                path: path.resolve(__dirname, 'dist'),
-                filename: 'retell-sdk-${{ env.VERSION }}-bundle.js',
-              },
-              module: {
-                rules: [
-                  {
-                    test: /\.js$/,
-                    exclude: /node_modules/,
-                    use: {
-                      loader: 'babel-loader',
-                      options: {
-                        presets: ['@babel/preset-env'],
-                      },
-                    },
-                  },
-                ],
-              },
-              mode: 'production',
-            },
-            {
-              entry: './build-project/src/index.js',
-              output: {
-                path: path.resolve(__dirname, 'dist'),
-                filename: 'retell-sdk-${{ env.VERSION }}-bundle.min.js',
-              },
-              module: {
-                rules: [
-                  {
-                    test: /\.js$/,
-                    exclude: /node_modules/,
-                    use: {
-                      loader: 'babel-loader',
-                      options: {
-                        presets: ['@babel/preset-env'],
-                      },
-                    },
-                  },
-                ],
-              },
-              mode: 'production',
-              optimization: {
-                minimize: true,  // This enables minification
-              },
-            },
-          ];" > webpack.config.js
+          npm ls retell-client-js-sdk
 
-      - name: Build with Webpack
+      # Build the project with Webpack
+      - name: Run Webpack build
         run: |
           npx webpack --config webpack.config.js
 
-      - name: Commit and push generated bundles to GitHub
+      # Commit the created bundles to the repository
+      - name: Commit bundles to repository
         run: |
-          # Configure git user
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          
-          # Add the generated files to git
-          git add dist/retell-sdk-${{ env.VERSION }}-bundle.js
-          git add dist/retell-sdk-${{ env.VERSION }}-bundle.min.js
-          
-          # Commit the changes
-          git commit -m "Add full and minified SDK bundles for version ${{ env.VERSION }}"
-
-          # Push the changes back to the repository
+          git add ./dist/
+          git commit -m "Add built bundles"
           git push origin main
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

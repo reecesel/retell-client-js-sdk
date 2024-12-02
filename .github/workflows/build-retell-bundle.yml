@@ -1,0 +1,45 @@
+name: Build Retell Web Bundle
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build-bundle:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18' # Specify the version compatible with your project
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: |
+          npm install -g npx
+          npm install parcel
+
+      - name: Create project structure and install SDK
+        run: |
+          mkdir -p build-project/src
+          cd build-project
+          npm init -y
+          npm install retell-client-js-sdk
+          echo "import { RetellWebClient } from 'retell-client-js-sdk'; window.retellWebClient = new RetellWebClient();" > src/index.js
+
+      - name: Build the bundle
+        run: |
+          cd build-project
+          npx parcel build src/index.js --out-dir ../dist --no-source-maps --no-cache
+
+      - name: Upload built bundle as artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: retell-bundle
+          path: dist/
